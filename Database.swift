@@ -129,4 +129,101 @@ final class DatabaseManager {
             table.column(taskStatus)
         })
     }
+    func createSubject(
+        name: String,
+        code: String,
+        teacher: String,
+        credits: Int
+    ) throws -> Subject {
+        
+        guard let db = db else {
+            throw NSError(
+                domain: "Database",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Database is not connected"]
+            )
+        }
+        
+        let insertedID = try db.run(
+            subjects.insert(
+                subjectName <- name,
+                subjectCode <- code,
+                self.teacher <- teacher,
+                self.credits <- credits
+            )
+        )
+        
+        return Subject(
+            id: insertedID,
+            name: name,
+            code: code,
+            teacher: teacher,
+            credits: credits
+        )
+    }
+    func fetchSubjects() throws -> [Subject] {
+        guard let db = db else {
+            throw NSError(
+                domain: "Database",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Database is not connected"]
+            )
+        }
+        
+        var result: [Subject] = []
+        
+        for row in try db.prepare(subjects) {
+            let subject = Subject(
+                id: row[subjectID],
+                name: row[subjectName],
+                code: row[subjectCode],
+                teacher: row[teacher],
+                credits: row[credits]
+            )
+            
+            result.append(subject)
+        }
+        
+        return result
+    }
+    func updateSubject(
+        id: Int64,
+        name: String,
+        code: String,
+        teacher: String,
+        credits: Int
+    ) throws {
+        
+        guard let db = db else {
+            throw NSError(
+                domain: "Database",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Database is not connected"]
+            )
+        }
+        
+        let subject = subjects.filter(subjectID == id)
+        
+        try db.run(
+            subject.update(
+                subjectName <- name,
+                subjectCode <- code,
+                self.teacher <- teacher,
+                self.credits <- credits
+            )
+        )
+    }
+    func deleteSubject(id: Int64) throws {
+        guard let db = db else {
+            throw NSError(
+                domain: "Database",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Database is not connected"]
+            )
+        }
+        
+        let subject = subjects.filter(subjectID == id)
+        
+        try db.run(subject.delete())
+    }
 }
