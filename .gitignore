@@ -1,0 +1,19 @@
+# Xcode / Swift build files
+DerivedData/
+.build/
+
+# Swift Package Manager
+Package.resolved
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# SQLite database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Temporary files
+*.tmp
+*.temp
