@@ -67,7 +67,6 @@ final class DatabaseManager {
             
             try createTables()
             
-            print("Database connected successfully!")
             
         } catch {
             print("Database connection failed: \(error)")
@@ -226,4 +225,5 @@ final class DatabaseManager {
         
         try db.run(subject.delete())
     }
+
 }

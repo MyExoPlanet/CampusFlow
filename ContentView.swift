@@ -16,17 +16,26 @@ struct ContentView: View {
                     )
                 } else {
                     ForEach(subjects) { subject in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(subject.name)
-                                .font(.headline)
-                            
-                            Text("\(subject.code) • \(subject.credits) credits")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            
-                            Text(subject.teacher)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                        NavigationLink {
+                            EditSubjectView(
+                                subject: subject,
+                                onSave: {
+                                    loadSubjects()
+                                }
+                            )
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(subject.name)
+                                    .font(.headline)
+                                
+                                Text("\(subject.code) • \(subject.credits) credits")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                
+                                Text(subject.teacher)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                     .onDelete(perform: deleteSubject)
@@ -137,6 +146,73 @@ struct AddSubjectView: View {
             
         } catch {
             print("Failed to save subject: \(error)")
+        }
+    }
+    
+}
+struct EditSubjectView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    let subject: Subject
+    let onSave: () -> Void
+    
+    @State private var name: String
+    @State private var code: String
+    @State private var teacher: String
+    @State private var credits: Int
+    
+    init(subject: Subject, onSave: @escaping () -> Void) {
+        self.subject = subject
+        self.onSave = onSave
+        
+        _name = State(initialValue: subject.name)
+        _code = State(initialValue: subject.code)
+        _teacher = State(initialValue: subject.teacher)
+        _credits = State(initialValue: subject.credits)
+    }
+    
+    var body: some View {
+        Form {
+            Section("Subject Details") {
+                TextField("Subject Name", text: $name)
+                TextField("Subject Code", text: $code)
+                TextField("Teacher", text: $teacher)
+                
+                Stepper(
+                    "Credits: \(credits)",
+                    value: $credits,
+                    in: 1...10
+                )
+            }
+        }
+        .navigationTitle("Edit Subject")
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    saveChanges()
+                }
+                .disabled(
+                    name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                    code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                )
+            }
+        }
+    }
+    
+    private func saveChanges() {
+        do {
+            try DatabaseManager.shared.updateSubject(
+                id: subject.id,
+                name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                code: code.trimmingCharacters(in: .whitespacesAndNewlines),
+                teacher: teacher.trimmingCharacters(in: .whitespacesAndNewlines),
+                credits: credits
+            )
+            
+            onSave()
+            dismiss()
+        } catch {
+            print("Failed to update subject: \(error)")
         }
     }
 }
